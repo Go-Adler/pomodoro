@@ -10,7 +10,7 @@
       <div id="timer" class="" style="font-size: 400px;">25:00</div>
       <div id="buttons" class="flex gap-3">
         <button class="bg-green-100 px-5 py-2 rounded-2xl text-black" onclick="startPauseTimer()">Start</button>
-        <button class="bg-blue-100 px-5 py-2 rounded-2xl  text-black" onclick="resetTimer()">Reset</button>
+        <button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>
         <button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>
       </div>
     </div>
@@ -43,6 +43,7 @@
             } else {
               clearInterval(timerInterval);
               alert(isRestMode ? "Rest session is over!" : "Pomodoro session is over!");
+              showNotification(isRestMode ? "Rest session is over!" : "Pomodoro session is over!");
               // Automatically switch to the opposite mode when the session ends
               switchMode();
             }
@@ -81,6 +82,22 @@
                                                       '<button class="bg-blue-100 px-5 py-2 rounded-2xl" onclick="resetTimer()">Reset</button>' +
                                                       '<button class="bg-yellow-100 px-5 py-2 rounded-2xl" onclick="switchMode()">Switch Mode</button>';
         isTimerRunning = false;
+      }
+
+      function showNotification(message) {
+        if (Notification.permission === "granted") {
+          new Notification("Pomodoro Timer", {
+            body: message,
+          });
+        } else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then(function (permission) {
+            if (permission === "granted") {
+              new Notification("Pomodoro Timer", {
+                body: message,
+              });
+            }
+          });
+        }
       }
     </script>
   </body>
