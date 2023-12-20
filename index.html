@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pomodoro Timer</title>
+  </head>
+  <body class="h-screen w-full flex justify-center items-center bg-black text-white">
+    <div class="flex flex-col items-center gap-5">
+      <div id="timer" class="" style="font-size: 400px;">25:00</div>
+      <div id="buttons" class="flex gap-3">
+        <button class="bg-green-100 px-5 py-2 rounded-2xl text-black" onclick="startPauseTimer()">Start</button>
+        <button class="bg-blue-100 px-5 py-2 rounded-2xl  text-black" onclick="resetTimer()">Reset</button>
+        <button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>
+      </div>
+    </div>
+
+    <script>
+      let pomodoroTime = 1500; // 25 minutes in seconds
+      let restTime = 300; // 5 minutes in seconds
+      let timeLeft = pomodoroTime;
+      let timerInterval;
+      let isTimerRunning = false;
+      let isRestMode = false;
+
+      function updateTimer() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        document.getElementById("timer").innerText = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      }
+
+      function startPauseTimer() {
+        if (isTimerRunning) {
+          clearInterval(timerInterval);
+          document.getElementById("buttons").innerHTML = '<button class="bg-green-100 px-5 py-2 rounded-2xl" onclick="startPauseTimer()">Continue</button>' +
+                                                        '<button class="bg-blue-100 px-5 py-2 rounded-2xl" onclick="resetTimer()">Reset</button>' +
+                                                        '<button class="bg-yellow-100 px-5 py-2 rounded-2xl" onclick="switchMode()">Switch Mode</button>';
+        } else {
+          timerInterval = setInterval(function () {
+            if (timeLeft > 0) {
+              timeLeft--;
+              updateTimer();
+            } else {
+              clearInterval(timerInterval);
+              alert(isRestMode ? "Rest session is over!" : "Pomodoro session is over!");
+              // Automatically switch to the opposite mode when the session ends
+              switchMode();
+            }
+          }, 1000);
+          document.getElementById("buttons").innerHTML = '<button class="bg-blue-100 px-5 py-2 rounded-2xl" onclick="pauseTimer()">Pause</button>' +
+                                                        '<button class="bg-blue-100 px-5 py-2 rounded-2xl" onclick="resetTimer()">Reset</button>' +
+                                                        '<button class="bg-yellow-100 px-5 py-2 rounded-2xl" onclick="switchMode()">Switch Mode</button>';
+        }
+        isTimerRunning = !isTimerRunning;
+      }
+
+      function pauseTimer() {
+        clearInterval(timerInterval);
+        document.getElementById("buttons").innerHTML = '<button class="bg-green-100 px-5 py-2 rounded-2xl" onclick="startPauseTimer()">Continue</button>' +
+                                                      '<button class="bg-blue-100 px-5 py-2 rounded-2xl" onclick="resetTimer()">Reset</button>' +
+                                                      '<button class="bg-yellow-100 px-5 py-2 rounded-2xl" onclick="switchMode()">Switch Mode</button>';
+        isTimerRunning = false;
+      }
+
+      function resetTimer() {
+        clearInterval(timerInterval);
+        timeLeft = isRestMode ? restTime : pomodoroTime;
+        updateTimer();
+        document.getElementById("buttons").innerHTML = '<button class="bg-green-100 px-5 py-2 rounded-2xl" onclick="startPauseTimer()">Start</button>' +
+                                                      '<button class="bg-blue-100 px-5 py-2 rounded-2xl" onclick="resetTimer()">Reset</button>' +
+                                                      '<button class="bg-yellow-100 px-5 py-2 rounded-2xl" onclick="switchMode()">Switch Mode</button>';
+        isTimerRunning = false;
+      }
+
+      function switchMode() {
+        clearInterval(timerInterval);
+        isRestMode = !isRestMode;
+        timeLeft = isRestMode ? restTime : pomodoroTime;
+        updateTimer();
+        document.getElementById("buttons").innerHTML = '<button class="bg-green-100 px-5 py-2 rounded-2xl" onclick="startPauseTimer()">Start</button>' +
+                                                      '<button class="bg-blue-100 px-5 py-2 rounded-2xl" onclick="resetTimer()">Reset</button>' +
+                                                      '<button class="bg-yellow-100 px-5 py-2 rounded-2xl" onclick="switchMode()">Switch Mode</button>';
+        isTimerRunning = false;
+      }
+    </script>
+  </body>
+  <script src="https://cdn.tailwindcss.com"></script>
+</html>
