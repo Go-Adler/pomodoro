@@ -16,128 +16,174 @@
       }
     </style>
   </head>
-  <body class="h-screen w-full flex justify-center items-center bg-black text-white">
+  <body
+    class="h-screen w-full flex justify-center items-center bg-black text-white"
+  >
     <div class="flex flex-col items-center gap-5 mt-40 md:mt-0">
       <div id="timer">25:00</div>
       <div id="buttons" class="flex gap-3">
-        <button class="bg-green-900 px-5 py-2 rounded-2xl text-black" onclick="startPauseTimer()">Start</button>
-        <button class="bg-blue-900 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>
-        <button class="bg-yellow-900 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>
+        <button
+          class="bg-green-900 px-5 py-2 rounded-2xl text-black"
+          onclick="startPauseTimer()"
+        >
+          Start
+        </button>
+        <button
+          class="bg-blue-900 px-5 py-2 rounded-2xl text-black"
+          onclick="resetTimer()"
+        >
+          Reset
+        </button>
+        <button
+          class="bg-yellow-900 px-5 py-2 rounded-2xl text-black"
+          onclick="switchMode()"
+        >
+          Switch Mode
+        </button>
       </div>
-      <div class="flex justify-center text-gray-500 mt-40 md:mt-0 text-xs">v 0.5</div>
+      <div class="flex justify-center text-gray-500 mt-40 md:mt-0 text-xs">
+        v 0.6
+      </div>
     </div>
 
     <script>
-      let pomodoroTime = 1500; // 25 minutes in seconds
-      let restTime = 300; // 5 minutes in seconds
-      let timeLeft = pomodoroTime;
-      let timerInterval;
-      let isTimerRunning = false;
-      let isRestMode = false;
-      let wakeLock = null;
+      let pomodoroTime = 10 // 25 minutes in seconds
+      let restTime = 10 // 5 minutes in seconds
+      let timeLeft = pomodoroTime
+      let timerInterval
+      let isTimerRunning = false
+      let isRestMode = false
+      let wakeLock = null
+      const notificationSound = new Audio("./iphone_notification.mp3")
 
       async function requestWakeLock() {
         try {
-          wakeLock = await navigator.wakeLock.request("screen");
+          wakeLock = await navigator.wakeLock.request("screen")
         } catch (err) {
-          console.error(`${err.name}, ${err.message}`);
+          console.error(`${err.name}, ${err.message}`)
         }
       }
 
       async function releaseWakeLock() {
         if (wakeLock) {
-          await wakeLock.release();
-          wakeLock = null;
+          await wakeLock.release()
+          wakeLock = null
         }
       }
 
       function updateTimer() {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        document.getElementById("timer").innerText = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+        const minutes = Math.floor(timeLeft / 60)
+        const seconds = timeLeft % 60
+        document.getElementById("timer").innerText = `${String(
+          minutes
+        ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
       }
 
-      document.addEventListener('visibilitychange', async function () {
-        if (document.visibilityState === 'visible' && isTimerRunning) {
-          await requestWakeLock();
+      document.addEventListener("visibilitychange", async function () {
+        if (document.visibilityState === "visible" && isTimerRunning) {
+          await requestWakeLock()
         }
-      });
+      })
 
       async function startPauseTimer() {
         if (isTimerRunning) {
-          clearInterval(timerInterval);
-          await releaseWakeLock();
+          clearInterval(timerInterval)
+          await releaseWakeLock()
           document.getElementById("buttons").innerHTML =
             '<button class="bg-green-100 px-5 py-2 rounded-2xl text-black" onclick="startPauseTimer()">Continue</button>' +
             '<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>' +
-            '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>';
+            '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>'
         } else {
-          await requestWakeLock();
+          await requestWakeLock()
           timerInterval = setInterval(function () {
             if (timeLeft > 0) {
-              timeLeft--;
-              updateTimer();
+              timeLeft--
+              updateTimer()
+
+              // Check if half of the time has elapsed and show a notification
+              if (timeLeft === Math.floor(pomodoroTime / 2) && !isRestMode) {
+                showNotification("Half of Pomodoro time has passed!")
+                playNotificationSound();
+              } else if (timeLeft === Math.floor(restTime / 2) && isRestMode) {
+                showNotification("Half of Rest time has passed!")
+                playNotificationSound();
+
+              }
             } else {
-              clearInterval(timerInterval);
-              alert(isRestMode ? "Rest session is over!" : "Pomodoro session is over!");
-              showNotification(isRestMode ? "Rest session is over!" : "Pomodoro session is over!");
-              // Automatically switch to the opposite mode when the session ends
-              switchMode();
+              clearInterval(timerInterval)
+              alert(
+                isRestMode
+                  ? "Rest session is over!"
+                  : "Pomodoro session is over!"
+              )
+              showNotification(
+                isRestMode
+                  ? "Rest session is over!"
+                  : "Pomodoro session is over!"
+              )
+              playNotificationSound();
+
+              switchMode()
             }
-          }, 1000);
+          }, 1000)
           document.getElementById("buttons").innerHTML =
             '<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="pauseTimer()">Pause</button>' +
             '<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>' +
-            '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>';
+            '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>'
         }
-        isTimerRunning = !isTimerRunning;
+        isTimerRunning = !isTimerRunning
       }
-
       function pauseTimer() {
-        clearInterval(timerInterval);
+        clearInterval(timerInterval)
         document.getElementById("buttons").innerHTML =
           '<button class="bg-green-100 px-5 py-2 rounded-2xl text-black" onclick="startPauseTimer()">Continue</button>' +
           '<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>' +
-          '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>';
-        isTimerRunning = false;
+          '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>'
+        isTimerRunning = false
       }
 
       function resetTimer() {
-        clearInterval(timerInterval);
-        timeLeft = isRestMode ? restTime : pomodoroTime;
-        updateTimer();
+        clearInterval(timerInterval)
+        timeLeft = isRestMode ? restTime : pomodoroTime
+        updateTimer()
         document.getElementById("buttons").innerHTML =
           '<button class="bg-green-100 px-5 py-2 rounded-2xl text-black" onclick="startPauseTimer()">Start</button>' +
           '<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>' +
-          '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>';
-        isTimerRunning = false;
+          '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>'
+        isTimerRunning = false
       }
 
       function switchMode() {
-        clearInterval(timerInterval);
-        isRestMode = !isRestMode;
-        timeLeft = isRestMode ? restTime : pomodoroTime;
-        updateTimer();
+        clearInterval(timerInterval)
+        isRestMode = !isRestMode
+        timeLeft = isRestMode ? restTime : pomodoroTime
+        updateTimer()
         document.getElementById("buttons").innerHTML =
           '<button class="bg-green-100 px-5 py-2 rounded-2xl text-black" onclick="startPauseTimer()">Start</button>' +
           '<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>' +
-          '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>';
-        isTimerRunning = false;
+          '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>'
+        isTimerRunning = false
       }
 
       function showNotification(message) {
         if (Notification.permission === "granted") {
           new Notification("Pomodoro Timer", {
             body: message,
-          });
+          })
         } else if (Notification.permission !== "denied") {
           Notification.requestPermission().then(function (permission) {
             if (permission === "granted") {
               new Notification("Pomodoro Timer", {
                 body: message,
-              });
+              })
             }
-          });
+          })
+        }
+      }
+
+      function playNotificationSound() {
+        if (notificationSound) {
+          notificationSound.play()
         }
       }
     </script>
