@@ -42,7 +42,7 @@
         </button>
       </div>
       <div class="flex justify-center text-gray-500 mt-40 md:mt-0 text-xs">
-        v 0.7
+        v 0.8
       </div>
     </div>
 
@@ -102,9 +102,11 @@
 
               // Check if half of the time has elapsed and show a notification
               if (timeLeft === Math.floor(pomodoroTime / 2) && !isRestMode) {
+                alert("Half of Rest time has passed!")
                 showNotification("Half of Pomodoro time has passed!")
                 playNotificationSound();
               } else if (timeLeft === Math.floor(restTime / 2) && isRestMode) {
+                alert("Half of Rest time has passed!")
                 showNotification("Half of Rest time has passed!")
                 playNotificationSound();
 
