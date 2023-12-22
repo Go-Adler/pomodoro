@@ -102,29 +102,21 @@
 
               // Check if half of the time has elapsed and show a notification
               if (timeLeft === Math.floor(pomodoroTime / 2) && !isRestMode) {
-                alert("Half of Rest time has passed!")
                 showNotification("Half of Pomodoro time has passed!")
                 playNotificationSound();
               } else if (timeLeft === Math.floor(restTime / 2) && isRestMode) {
-                alert("Half of Rest time has passed!")
                 showNotification("Half of Rest time has passed!")
                 playNotificationSound();
 
               }
             } else {
               clearInterval(timerInterval)
-              alert(
-                isRestMode
-                  ? "Rest session is over!"
-                  : "Pomodoro session is over!"
-              )
               showNotification(
                 isRestMode
                   ? "Rest session is over!"
                   : "Pomodoro session is over!"
               )
               playNotificationSound();
-
               switchMode()
             }
           }, 1000)
