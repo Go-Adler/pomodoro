@@ -52,7 +52,7 @@
         </button>
       </div>
       <div class="flex justify-center text-gray-500 mt-5  text-xs">
-        v 0.9
+        v 0.10
       </div>
     </div>
 
@@ -71,7 +71,8 @@
       // Function to toggle between 25 and 50 minutes for work time
       function switchWorkTime() {
         if (!isTimerRunning) {
-          pomodoroTime = pomodoroTime === 1500 ? 3000 : 1500
+          if (pomodoroTime === 3600) pomodoroTime = 1500
+          else pomodoroTime += 300
           timeLeft = isRestMode ? restTime : pomodoroTime
           updateTimer()
         }
