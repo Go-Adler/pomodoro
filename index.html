@@ -19,35 +19,44 @@
   <body
     class="h-screen w-full flex justify-center items-center bg-black text-white"
   >
-    <div class="flex flex-col items-center gap-5 mt-40 md:mt-0">
-      <div id="timer">25:00</div>
-      <div id="buttons" class="flex gap-3">
+    <div class="flex flex-col items-center gap-5 mt-40 md:mt-0 text-xs">
+      <div id="timer" class="md:mb-40 md:mt-60">25:00</div>
+      <div id="buttons" class="flex gap-3 grid md:flex mt-40">
+        <!-- Buttons for controlling the timer -->
         <button
-          class="bg-green-900 px-5 py-2 rounded-2xl text-black"
+          class="bg-green-100 px-5 py-2 rounded-2xl text-black"
           onclick="startPauseTimer()"
         >
           Start
         </button>
         <button
-          class="bg-blue-900 px-5 py-2 rounded-2xl text-black"
+          class="bg-blue-100 px-5 py-2 rounded-2xl text-black"
           onclick="resetTimer()"
         >
           Reset
         </button>
         <button
-          class="bg-yellow-900 px-5 py-2 rounded-2xl text-black"
-          onclick="switchMode()"
+          class="bg-yellow-100 px-5 py-2 rounded-2xl text-black"
+          onclick="toggleMode()"
         >
           Switch Mode
         </button>
+        <button
+          class="bg-purple-100 px-5 py-2 rounded-2xl text-black"
+          onclick="switchWorkTime()"
+        >
+          Switch Work Time
+        </button>
       </div>
-      <div class="flex justify-center text-gray-500 mt-40 md:mt-0 text-xs">
-        v 0.8
+      <div class="flex justify-center text-gray-500 mt-5  text-xs">
+        v 0.9
       </div>
     </div>
 
     <script>
+      // Initial timer settings
       let pomodoroTime = 1500 // 25 minutes in seconds
+      let extendedWorkTime = 3000 // 50 minutes in seconds
       let restTime = 300 // 5 minutes in seconds
       let timeLeft = pomodoroTime
       let timerInterval
@@ -56,6 +65,16 @@
       let wakeLock = null
       const notificationSound = new Audio("./iphone_notification.mp3")
 
+      // Function to toggle between 25 and 50 minutes for work time
+      function switchWorkTime() {
+        if (!isTimerRunning) {
+          pomodoroTime = pomodoroTime === 1500 ? 3000 : 1500
+          timeLeft = isRestMode ? restTime : pomodoroTime
+          updateTimer()
+        }
+      }
+
+      // Function to request wake lock for preventing screen sleep
       async function requestWakeLock() {
         try {
           wakeLock = await navigator.wakeLock.request("screen")
@@ -64,6 +83,7 @@
         }
       }
 
+      // Function to release the wake lock
       async function releaseWakeLock() {
         if (wakeLock) {
           await wakeLock.release()
@@ -71,6 +91,7 @@
         }
       }
 
+      // Function to update the displayed timer
       function updateTimer() {
         const minutes = Math.floor(timeLeft / 60)
         const seconds = timeLeft % 60
@@ -79,86 +100,99 @@
         ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
       }
 
+      // Event listener for visibility change to handle wake lock
       document.addEventListener("visibilitychange", async function () {
         if (document.visibilityState === "visible" && isTimerRunning) {
           await requestWakeLock()
         }
       })
 
+      // Function to start or pause the timer
       async function startPauseTimer() {
         if (isTimerRunning) {
           clearInterval(timerInterval)
           await releaseWakeLock()
-          document.getElementById("buttons").innerHTML =
-            '<button class="bg-green-100 px-5 py-2 rounded-2xl text-black" onclick="startPauseTimer()">Continue</button>' +
-            '<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>' +
-            '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>'
         } else {
           await requestWakeLock()
-          timerInterval = setInterval(function () {
-            if (timeLeft > 0) {
-              timeLeft--
-              updateTimer()
-
-              // Check if half of the time has elapsed and show a notification
-              if (timeLeft === Math.floor(pomodoroTime / 2) && !isRestMode) {
-                showNotification("Half of Pomodoro time has passed!")
-                playNotificationSound();
-              } else if (timeLeft === Math.floor(restTime / 2) && isRestMode) {
-                showNotification("Half of Rest time has passed!")
-                playNotificationSound();
-
-              }
-            } else {
-              clearInterval(timerInterval)
-              showNotification(
-                isRestMode
-                  ? "Rest session is over!"
-                  : "Pomodoro session is over!"
-              )
-              playNotificationSound();
-              switchMode()
-            }
-          }, 1000)
-          document.getElementById("buttons").innerHTML =
-            '<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="pauseTimer()">Pause</button>' +
-            '<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>' +
-            '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>'
+          startTimerInterval()
         }
         isTimerRunning = !isTimerRunning
-      }
-      function pauseTimer() {
-        clearInterval(timerInterval)
-        document.getElementById("buttons").innerHTML =
-          '<button class="bg-green-100 px-5 py-2 rounded-2xl text-black" onclick="startPauseTimer()">Continue</button>' +
-          '<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>' +
-          '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>'
-        isTimerRunning = false
+        updateButtons()
       }
 
+      // Function to pause the timer
+      function pauseTimer() {
+        clearInterval(timerInterval)
+        isTimerRunning = false
+        updateButtons()
+      }
+
+      // Function to reset the timer
       function resetTimer() {
         clearInterval(timerInterval)
         timeLeft = isRestMode ? restTime : pomodoroTime
         updateTimer()
-        document.getElementById("buttons").innerHTML =
-          '<button class="bg-green-100 px-5 py-2 rounded-2xl text-black" onclick="startPauseTimer()">Start</button>' +
-          '<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>' +
-          '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>'
         isTimerRunning = false
+        updateButtons(true)
       }
 
+      // Function to switch between work and rest modes
       function switchMode() {
         clearInterval(timerInterval)
         isRestMode = !isRestMode
         timeLeft = isRestMode ? restTime : pomodoroTime
         updateTimer()
-        document.getElementById("buttons").innerHTML =
-          '<button class="bg-green-100 px-5 py-2 rounded-2xl text-black" onclick="startPauseTimer()">Start</button>' +
-          '<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>' +
-          '<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="switchMode()">Switch Mode</button>'
         isTimerRunning = false
+        updateButtons()
       }
 
+      function updateButtons(reset) {
+        let startButtonText = isTimerRunning ? "Pause" : "Resume"
+        if (reset) startButtonText = 'Start'
+        console.log(reset, 152);
+        document.getElementById("buttons").innerHTML =
+          `<button class="bg-green-100 px-5 py-2 rounded-2xl text-black" onclick="startPauseTimer()">${startButtonText}</button>` +
+          `<button class="bg-blue-100 px-5 py-2 rounded-2xl text-black" onclick="resetTimer()">Reset</button>` +
+          `<button class="bg-yellow-100 px-5 py-2 rounded-2xl text-black" onclick="toggleMode()">Switch Mode</button>` +
+          `<button class="bg-purple-100 px-5 py-2 rounded-2xl text-black" onclick="switchWorkTime()">Switch Work Time</button>`
+      }
+
+      // Function to toggle between switch mode and pause
+      function toggleMode() {
+        if (isTimerRunning) {
+          pauseTimer()
+        } else {
+          switchMode()
+        }
+      }
+
+      // Function to start the timer interval
+      function startTimerInterval() {
+        timerInterval = setInterval(function () {
+          if (timeLeft > 0) {
+            timeLeft--
+            updateTimer()
+
+            // Check if half of the time has elapsed and show a notification
+            if (timeLeft === Math.floor(pomodoroTime / 2) && !isRestMode) {
+              showNotification("Half of Pomodoro time has passed!")
+              playNotificationSound()
+            } else if (timeLeft === Math.floor(restTime / 2) && isRestMode) {
+              showNotification("Half of Rest time has passed!")
+              playNotificationSound()
+            }
+          } else {
+            clearInterval(timerInterval)
+            showNotification(
+              isRestMode ? "Rest session is over!" : "Pomodoro session is over!"
+            )
+            playNotificationSound()
+            switchMode()
+          }
+        }, 1000)
+      }
+
+      // Function to display a notification
       function showNotification(message) {
         if (Notification.permission === "granted") {
           new Notification("Pomodoro Timer", {
@@ -175,6 +209,7 @@
         }
       }
 
+      // Function to play the notification sound
       function playNotificationSound() {
         if (notificationSound) {
           notificationSound.play()
@@ -184,3 +219,4 @@
   </body>
   <script src="https://cdn.tailwindcss.com"></script>
 </html>
+<!--  -->
