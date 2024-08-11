@@ -136,14 +136,16 @@
 
     // Function to switch between work and rest modes
     function switchMode() {
-      clearInterval(timerInterval)
-      isRestMode = !isRestMode
-      timeLeft = isRestMode ? restTime : pomodoroTime
-      updateTimer()
-      isTimerRunning = false
-      updateButtons()
+      if (!isTimerRunning) {
+        clearInterval(timerInterval)
+        isRestMode = !isRestMode
+        timeLeft = isRestMode ? restTime : pomodoroTime
+        updateTimer()
+        isTimerRunning = false
+        updateButtons()
 
-      document.querySelector('#startButton').innerText = 'Start'
+        document.querySelector('#startButton').innerText = 'Start'
+      }
     }
 
     function updateButtons(reset) {
